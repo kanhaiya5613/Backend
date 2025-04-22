@@ -12,10 +12,13 @@ import fs from "fs"
 
 const uploadOnCloudinary = async (localFilePath) => {
     try{
-        if(!localFilePath) return null
+        if(!localFilePath) return null;
         // upload the file on cloudinary
-        const response = await cloudinary.uploader.upload(localFilePath, {resource_type: "auto"})
-        console.log("file is uploaded on cloudinary ", response.url)
+        const response = await cloudinary.uploader.upload(localFilePath, {resource_type: "auto",});
+        //console.log("file is uploaded on cloudinary ", response.url);
+        fs.unlinkSync(localFilePath)
+        return response;
+        console.log(response);
     }catch (error) {
         fs.unlinkSync(localFilePath)  // remove the locally saved temporally file as the upload operation got failed
         return null;
