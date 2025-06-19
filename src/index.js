@@ -8,9 +8,9 @@ import app from "./app.js"
 
  dotenv.config({
     path:'./.env'
- })
+})
 
- 
+
 
 connectDB()
 .then(()=>{
@@ -25,26 +25,6 @@ connectDB()
 
 
 
-
-
-
-
-
-
-
-
-
-
- 
-//  import express from "express"
- 
-//  const app = express();
-
-//  (async () => {
-//     try {
-//         await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`)
-//         app.on("errror", (error) => {
-//             console.log("ERRR: ", error);
 //             throw error
 //         })
 
