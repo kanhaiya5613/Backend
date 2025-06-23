@@ -104,8 +104,9 @@ return res.status(201).json(
 
 })
 
+// Login User
 const loginUser = asyncHandler(async (req, res) => {
-     // steps 
+     // steps  
 
    // get the username or email and password from user   // req body -> data
    // check in db user exists or not   // find the user
@@ -129,13 +130,14 @@ const loginUser = asyncHandler(async (req, res) => {
     if(!user) {
         throw new ApiError (404, "User does not exist")
     }
-
+    // password check
     const isPasswordValid =  await user.isPasswordCorrect(password)
 
     if(!isPasswordValid){
         throw new ApiError(401, "Invalid user Credentials")
     }
-
+    // access and refresh token
+    // generate access and refresh token
     const {accessToken,refreshToken} =await generateAccessAndRefreshTokens(user._id)
 
    const loggedInUser = await User.findById(user._id).select("-password -refreshToken ")
@@ -144,7 +146,9 @@ const loginUser = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure:trusted
    }
-   return res.status(200).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken,options)
+   return res
+   .status(200)
+   .cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken,options)
    .json(
     new ApiResponse(
         200,
@@ -159,7 +163,10 @@ const loginUser = asyncHandler(async (req, res) => {
 
 
 // Logout User
-
+// steps
+// get the user from request
+// update the refresh token to undefined
+// clear the cookies
 const logoutUser = asyncHandler(async(req,res) => {
     await User.findByIdAndUpdate(
         req.user._id,
@@ -183,8 +190,13 @@ const logoutUser = asyncHandler(async(req,res) => {
        .json(new ApiResponse(200,{}, "User logged Out"))
 })
 
-// refresh token handler
-
+    //refresh access token endpoint
+    //steps
+// get the refresh token from request body or cookies
+// verify the refresh token
+// if valid, get the user from db
+// if user exists, generate new access token and refresh token
+// send the new access token and refresh token in cookies
    const refreshAccessToken = asyncHandler(async(req,res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
@@ -233,6 +245,11 @@ const logoutUser = asyncHandler(async(req,res) => {
 })
 
 // Change Current Paassword
+//steps
+// get the old password and new password from request body
+// get the user from request
+// check if the old password is correct
+// if correct, update the password in db
  const changeCurrentPassword = asyncHandler(async(req,res) => {
     const {oldPassword, newPassword } = req.body
 
@@ -252,6 +269,8 @@ const logoutUser = asyncHandler(async(req,res) => {
  })
 
  // getting current user
+ //steps
+// get the user from request
     const getCurrentUser = asyncHandler(async(req,res) => {
         return res
         .status(200)
@@ -259,7 +278,11 @@ const logoutUser = asyncHandler(async(req,res) => {
     })
 
 // update account details
-
+//steps
+// get the user from request
+// get the fullName and email from request body
+// check if fullName and email are not empty
+// update the user in db
     const updateAccountDetails = asyncHandler(async(req,res) => {
         const { fullName , email} = req.body
 
@@ -283,7 +306,12 @@ const logoutUser = asyncHandler(async(req,res) => {
     })
 
 // Updating avatar
-
+//steps
+// get the user from request
+// get the avatar file from request
+// check if the avatar file is present
+// upload the avatar file to cloudinary
+// update the user in db with the new avatar url
     const updateUserAvatar = asyncHandler(async(req, res) =>{
         const avatarLocalPath = req.file?.path
 
@@ -353,5 +381,6 @@ export {
     changeCurrentPassword,
     getCurrentUser,
     updateAccountDetails,
-    updateUserAvatar
+    updateUserAvatar,
+    updateUserCoverImage
     }
