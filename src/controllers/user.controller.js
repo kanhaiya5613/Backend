@@ -1,7 +1,7 @@
 import {asyncHandler} from "../utiles/asyncHandler.js";
 import {ApiError} from "../utiles/ApiError.js";
 import {User} from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utiles/cloudinary.js";
+import { uploadOnCloudinary , deleteFromCloudinary} from "../utiles/cloudinary.js";
 import { ApiResponse } from "../utiles/ApiResponse.js";
 import { trusted } from "mongoose";
 import jwt from "jsonwebtoken";
@@ -274,7 +274,7 @@ const logoutUser = asyncHandler(async(req,res) => {
     const getCurrentUser = asyncHandler(async(req,res) => {
         return res
         .status(200)
-        .json(200,req.user,"Current user fetched successfully ")
+        .json(new ApiResponse( 200,req.user,"Current user fetched successfully "))
     })
 
 // update account details
@@ -290,7 +290,7 @@ const logoutUser = asyncHandler(async(req,res) => {
             throw new ApiError(400, "All fields are Required")
         }
 
-        User.findByIdAndUpdate(
+       const user = await User.findByIdAndUpdate(
             req.user?._id,
             {
                 $set: {
@@ -350,7 +350,7 @@ const logoutUser = asyncHandler(async(req,res) => {
         const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
         if(!coverImage.url){
-            throw new ApiError(400, "Error while updated avatar on cloudinary")
+            throw new ApiError(400, "Error while updated cover Image on cloudinary")
         }
         const user = await User.findByIdAndUpdate(
             req.user?._id,
