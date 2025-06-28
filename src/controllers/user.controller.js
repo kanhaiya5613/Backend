@@ -210,7 +210,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             process.env.REFRESH_TOKEN_SECRET
         )
 
-        const user = await user.findById(decodedToken?._id)
+        const user = await User.findById(decodedToken?._id)
 
         if (!user) {
             throw new ApiError(401, "invalid refresh token")
@@ -313,63 +313,77 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 // upload the avatar file to cloudinary
 // update the user in db with the new avatar url
 const updateUserAvatar = asyncHandler(async (req, res) => {
-    const avatarLocalPath = req.file?.path
+  const avatarLocalPath = req.file?.path;
 
-    if (!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file is missing")
-    }
-    const avatar = await uploadOnCloudinary(avatarLocalPath)
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar file is missing");
+  }
 
-    if (!avatar.url) {
-        throw new ApiError(400, "Error while uploading avatar on cloudinary")
-    }
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set: {
-                avatar: avatar.url
-            }
-        },
-        {
-            new: true
-        }
-    ).select("-password")
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(200, user, "avatar updated successfully")
-        )
-})
+  // Get the user from DB to fetch old public_id
+  const user = await User.findById(req.user._id);
+  const oldAvatarPublicId = user?.avatar?.public_id;
+
+  // Upload new avatar to Cloudinary
+  const uploadedAvatar = await uploadOnCloudinary(avatarLocalPath);
+
+  if (!uploadedAvatar?.url || !uploadedAvatar?.public_id) {
+    throw new ApiError(400, "Error while uploading avatar on cloudinary");
+  }
+
+  // Update user with new avatar object (url + public_id)
+  user.avatar = {
+    url: uploadedAvatar.url,
+    public_id: uploadedAvatar.public_id,
+  };
+
+  await user.save({ validateBeforeSave: false });
+
+  // Delete old avatar from Cloudinary
+  if (oldAvatarPublicId) {
+    await deleteFromCloudinary(oldAvatarPublicId);
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "Avatar updated successfully")
+  );
+});
+
 // updating coverImage
 const updateUserCoverImage = asyncHandler(async (req, res) => {
-    const coverImageLocalPath = req.file?.path
+  const coverImageLocalPath= req.file?.path;
 
-    if (!coverImageLocalPath) {
-        throw new ApiError(400, "Cover Image file is missing")
-    }
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+  if (!coverImageLocalPath) {
+    throw new ApiError(400, "Avatar file is missing");
+  }
 
-    if (!coverImage.url) {
-        throw new ApiError(400, "Error while updated cover Image on cloudinary")
-    }
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set: {
-                coverImage: coverImage.url
-            }
-        },
-        {
-            new: true
-        }
-    ).select("-password")
+  // Get the user from DB to fetch old public_id
+  const user = await User.findById(req.user._id);
+  const oldCoverImagePublicId = user?.coverImage?.public_id;
 
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(200, user, "Cover Image uploaded successfully")
-        )
-})
+  // Upload new avatar to Cloudinary
+  const uploadedCoverImage = await uploadOnCloudinary(coverImageLocalPath);
+
+  if (!uploadedCoverImage?.url || !uploadedCoverImage?.public_id) {
+    throw new ApiError(400, "Error while uploading Cover Image on cloudinary");
+  }
+
+  // Update user with new avatar object (url + public_id)
+  user.avatar = {
+    url: uploadedCoverImage.url,
+    public_id: uploadedCoverImage.public_id,
+  };
+
+  await user.save({ validateBeforeSave: false });
+
+  // Delete old avatar from Cloudinary
+  if (oldCoverImagePublicId) {
+    await deleteFromCloudinary(oldCoverImagePublicId);
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "Cover Image updated successfully")
+  );
+});
 
 // getting user channel profile
 // steps
