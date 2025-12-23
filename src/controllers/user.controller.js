@@ -81,13 +81,21 @@ const registerUser = asyncHandler(async (req, res) => {
     // create user object - create entry in db
 
     const user = await User.create({
-        fullName,
-        avatar: avatar.url,
-        coverImage: coverImage?.url || "",
-        email,
-        password,
-        username: username.toLowerCase()
-    })
+  fullName,
+  avatar: {
+    public_id: avatar.public_id,
+    url: avatar.url
+  },
+  coverImage: coverImage
+    ? {
+        public_id: coverImage.public_id,
+        url: coverImage.url
+      }
+    : undefined,
+  email,
+  password,
+  username: username.toLowerCase()
+})
     // remove password and refresh token field from response
 
     const createdUser = await User.findById(user._id).select(
