@@ -118,3 +118,8 @@ dist
 .pnp.*
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node
+.node_modules/
+.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
